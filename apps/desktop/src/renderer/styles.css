@@ -1,0 +1,10 @@
+body { margin: 0; font-family: Inter, Arial, sans-serif; }
+.layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+aside { background: #121826; color: #fff; padding: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+aside button { text-align: left; border: 0; padding: .6rem; border-radius: .4rem; background: #293041; color: white; cursor: pointer; }
+aside button.active { background: #3d73ff; }
+main { padding: 1rem 1.5rem; }
+section { background: #f7f8fc; border-radius: .75rem; padding: 1rem; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .4rem; border-bottom: 1px solid #dbe0ea; text-align: left; }
+.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
