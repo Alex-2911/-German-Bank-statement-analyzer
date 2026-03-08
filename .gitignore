@@ -1,0 +1,13 @@
+node_modules
+dist
+out
+*.log
+.DS_Store
+coverage
+*.db
+*.db-shm
+*.db-wal
+apps/desktop/.vite
+apps/desktop/dist
+apps/desktop/dist-electron
+*.tsbuildinfo

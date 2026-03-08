@@ -1,0 +1,17 @@
+{
+  "name": "german-bank-statement-analyzer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first desktop analyzer for German giro PDF statements",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/desktop",
+    "build": "npm run build -ws",
+    "typecheck": "npm run typecheck -ws",
+    "lint:guardrails": "node scripts/guardrails-check.mjs"
+  },
+  "license": "MIT"
+}
