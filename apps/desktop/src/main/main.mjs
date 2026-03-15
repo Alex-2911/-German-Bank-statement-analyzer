@@ -20,6 +20,7 @@ const defaultMapping = {
 };
 
 let store;
+let mainWindow;
 
 function computeMonthSummary(transactions, openingBalance, closingBalance) {
   const income = transactions.filter((t) => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
@@ -76,16 +77,40 @@ async function importTextAsStatement({ text, fileName, sourceFileId, fileHash })
   return { warnings: parsed.warnings, inserted: hydrated.length };
 }
 
+function getWindowStatePath() {
+  return path.join(app.getPath("userData"), "window-state.json");
+}
+
+function loadWindowState() {
+  const fallback = { width: 1300, height: 900 };
+  try {
+    const raw = fs.readFileSync(getWindowStatePath(), "utf8");
+    return { ...fallback, ...JSON.parse(raw) };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveWindowState(win) {
+  if (!win || win.isDestroyed()) return;
+  const bounds = win.getBounds();
+  fs.writeFileSync(getWindowStatePath(), JSON.stringify(bounds, null, 2));
+}
+
 function createWindow() {
-  const win = new BrowserWindow({
-    width: 1300,
-    height: 900,
+  const state = loadWindowState();
+  mainWindow = new BrowserWindow({
+    ...state,
     webPreferences: {
       preload: path.join(app.getAppPath(), "src/preload/preload.mjs")
     }
   });
 
-  win.loadURL("http://localhost:5173");
+  mainWindow.on("resize", () => saveWindowState(mainWindow));
+  mainWindow.on("move", () => saveWindowState(mainWindow));
+  mainWindow.on("close", () => saveWindowState(mainWindow));
+
+  mainWindow.loadURL("http://localhost:5173");
 }
 
 app.whenReady().then(() => {
@@ -99,19 +124,27 @@ app.whenReady().then(() => {
   ipcMain.handle("rule:save", (_event, rule) => store.saveRule(rule));
 
   ipcMain.handle("import:pdf", async () => {
-    const selected = await dialog.showOpenDialog({ properties: ["openFile", "multiSelections"], filters: [{ name: "PDF", extensions: ["pdf"] }] });
+    const selected = await dialog.showOpenDialog({
+      properties: ["openFile", "multiSelections"],
+      filters: [{ name: "Statements", extensions: ["pdf", "csv"] }]
+    });
     if (selected.canceled) return [];
     const results = [];
     for (const filePath of selected.filePaths) {
       const fileBuffer = fs.readFileSync(filePath);
       const fileHash = crypto.createHash("sha256").update(fileBuffer).digest("hex");
       const sourceFileId = fileHash.slice(0, 24);
+      const ext = path.extname(filePath).toLowerCase();
       let extractedText = "";
-      try {
-        const parsedPdf = await pdf(fileBuffer);
-        extractedText = parsedPdf.text ?? "";
-      } catch {
-        extractedText = "";
+      if (ext === ".csv") {
+        extractedText = fileBuffer.toString("utf8");
+      } else {
+        try {
+          const parsedPdf = await pdf(fileBuffer);
+          extractedText = parsedPdf.text ?? "";
+        } catch {
+          extractedText = "";
+        }
       }
       const outcome = await importTextAsStatement({
         text: extractedText,
