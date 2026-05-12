@@ -1,34 +1,51 @@
-# German Bank PDF Statement Analyzer
+# German Bank Statement Analyzer
 
-Local-first desktop application for importing and analyzing **German giro account** PDF statements.
+Local-first Electron desktop application for importing and analyzing German giro account statements and depot summaries.
+
+The current app is a plain JavaScript Electron shell with a static renderer. It stores runtime data as JSON in Electron `userData` and uses a generic experimental parser for local PDF/CSV imports.
+
+The project is intentionally generic for public release. It does not include specific bank names, personal names, real account numbers, IBANs, statement files, real merchant data, or real transaction descriptions.
 
 ## Privacy-first principles
 
 - Everything runs locally on your machine.
 - Core features require no cloud services.
 - No telemetry, trackers, or auto-upload behavior.
-- Demo content in this repository is synthetic only.
+- Imported files are read locally and are not committed to this repository.
+- Runtime data is stored in Electron `userData` as `german-bank-statement-analyzer-data.json`.
+- Demo and parser examples must stay synthetic and generic.
 
-## Features in v0.1 scaffold
+## Current desktop workflow
 
-- Electron desktop shell with React + TypeScript UI.
-- SQLite local storage for transactions, imports, rules, and monthly summaries.
-- Parser pipeline (`BaseGermanBankParser` + generic implementation).
-- Deterministic transaction IDs based on normalized text and signed amount.
-- Re-import behavior replacing records from same source file only.
-- Layered categorization logic: manual override → user rule → built-in rule → fallback.
-- Dashboard and analysis charts (monthly trend + tag split).
+- Four neutral account areas:
+  - Primary Giro
+  - Primary Depot
+  - Secondary Giro
+  - Secondary Depot
+- Two-row period navigation for year/month analysis and year/month transactions.
+- Local PDF/CSV import via the **Import PDF / CSV** button.
+- Summary cards for income, expense, net, opening balance, and closing balance.
+- Giro transaction tables split into Outcome and Income columns.
+- Generic category and tag assignment using exactly these tags: `Fixed`, `Variable`, `Saving`.
+- Depot summary views with month-level deposits/income, opening balance, closing balance, net movement, and optional shares/price-per-share fields.
+
+## Parser status
+
+The parser is generic and experimental. It uses common German statement patterns, German amount/date formats, and generic keywords, but it is not guaranteed to parse every PDF or CSV layout correctly.
+
+Users should manually validate parsed transactions, categories, tags, opening balances, closing balances, and depot movements before relying on analysis results.
 
 ## Repository structure
 
-- `apps/desktop` – Electron + React local app.
-- `packages/shared-types` – typed domain models.
-- `packages/parser` – parser interfaces and generic parser.
-- `packages/db` – SQLite schema and storage operations.
-- `packages/rules` – categorization rule engine.
-- `docs/` – product and architecture notes.
+- `apps/desktop/main.js` – Electron main process, local import workflow, and summary merge logic.
+- `apps/desktop/preload.js` – secure IPC bridge exposed as `window.bankAnalyzer`.
+- `apps/desktop/data/storage.js` – JSON storage helper for Electron `userData`.
+- `apps/desktop/services/pdfParser.js` – generic parser helpers for German dates, amounts, giro transactions, and depot summaries.
+- `apps/desktop/renderer/app.js` – plain JavaScript static renderer.
+- `apps/desktop/renderer/styles.css` – desktop UI styling.
+- `docs/` – current architecture and product notes.
 
-## macOS local setup
+## Local setup
 
 ### Prerequisites
 
@@ -42,34 +59,38 @@ npm install
 npm run dev
 ```
 
-The desktop app will launch through Electron and open the local renderer.
+The desktop app launches through Electron and loads the local renderer.
 
-### Local data locations
+### Validation
 
-- Database file: Electron `userData` directory, file name `german-bank-statement-analyzer.db`.
-- Imported source metadata: stored in SQLite `import_files` table.
-- Transaction and summary records: stored in SQLite `transactions` and `monthly_summaries` tables.
+```bash
+node --check apps/desktop/main.js
+node --check apps/desktop/preload.js
+node --check apps/desktop/renderer/app.js
+node --check apps/desktop/services/pdfParser.js
+node --check apps/desktop/data/storage.js
+npm run typecheck -w apps/desktop
+```
 
-## Import workflow
+## Security and data hygiene
 
-1. Open **Imports** section.
-2. Use **Import PDF files** for local machine-generated PDFs.
-3. Use **Import synthetic demo batch** for safe test data.
-4. Review parsed transactions and chart summaries.
+Do not commit:
 
-## Current limitations
-
-- Generic parser supports common machine-generated statement layouts only.
-- OCR is not included in v0.1.
-- CSV/JSON export and restore UI controls are planned next.
+- Personal names.
+- Real account numbers or IBANs.
+- Real transaction descriptions.
+- Real PDF/CSV content.
+- Imported PDFs or CSVs.
+- Debug extracted text.
+- Local `userData` JSON files.
 
 ## Roadmap
 
-- Additional German statement layout adapters.
-- CSV / CAMT / MT940 import.
+- Stronger layout-specific parser adapters using generic public fixtures.
+- CSV/CAMT/MT940 import support.
+- Export/import backup controls.
 - Rule suggestions and recurring transaction detection.
-- Budget targets and multi-account support.
-- Dark mode and signed macOS packaging.
+- Signed desktop packages.
 
 ## License
 

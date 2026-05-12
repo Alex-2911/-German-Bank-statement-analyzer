@@ -2,33 +2,16 @@
   "name": "@german-bank/desktop",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"wait-on tcp:5173 && electron .\"",
-    "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "dev": "electron .",
+    "build": "echo \"Desktop app uses static Electron files\"",
+    "typecheck": "node --check main.js && node --check preload.js && node --check renderer/app.js && node --check services/pdfParser.js && node --check data/storage.js"
   },
   "dependencies": {
-    "@german-bank/db": "0.1.0",
-    "@german-bank/parser": "0.1.0",
-    "@german-bank/rules": "0.1.0",
-    "@german-bank/shared-types": "0.1.0",
-    "chart.js": "^4.4.8",
-    "pdf-parse": "^1.1.1",
-    "react": "^18.3.1",
-    "react-chartjs-2": "^5.3.0",
-    "react-dom": "^18.3.1"
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
-    "@types/node": "^22.13.9",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^9.1.2",
-    "electron": "^34.2.0",
-    "typescript": "^5.7.3",
-    "vite": "^6.2.0",
-    "wait-on": "^8.0.2"
+    "electron": "^34.2.0"
   },
-  "main": "src/main/main.mjs"
+  "main": "main.js"
 }

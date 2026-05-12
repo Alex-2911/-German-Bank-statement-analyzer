@@ -1,36 +1,35 @@
 # Architecture
 
-## Local-first modules
+## Current local desktop app
 
-- **desktop app**: Electron shell + React views.
-- **parser package**: statement text parsing pipeline.
-- **db package**: SQLite schema and import-safe replace logic.
-- **rules package**: layered category and tag assignment.
-- **shared-types**: canonical typed contracts.
+German Bank Statement Analyzer currently ships as a plain JavaScript Electron app with a static local renderer.
+
+- **Electron main process**: creates the desktop window, reads selected local PDF/CSV files, extracts PDF text locally, computes file hashes, and merges parsed data.
+- **Preload bridge**: exposes a small `window.bankAnalyzer` IPC API for loading, saving, and importing local data.
+- **Static renderer**: renders account navigation, summary cards, transaction tables, and analysis views without a browser build step.
+- **JSON storage helper**: persists data in Electron `userData` as `german-bank-statement-analyzer-data.json`.
+- **Generic parser helper**: parses common German amount/date patterns and simple giro/depot summary text layouts.
 
 ## Deterministic transaction identity
 
-Stable transaction ID strategy:
+Stable transaction IDs are generated from neutral import and transaction fields:
 
-`sha256(accountType + bookingDate + amount + normalizedDescription)`
+`sha256(accountId + sourceFileId + bookingDate + amount + normalizedDescription)`
 
-Normalization:
+Normalization focuses on local parser inputs:
 
 - trim edges
 - collapse repeated spaces and line breaks
-- normalize umlauts and ß consistently
-- lowercase for deterministic matching
+- parse German `dd.mm.yyyy` dates
+- parse German amounts such as `1.234,56`
 
 ## Re-import and dedupe
 
-- Imports are additive by source file.
-- Re-import of same file hash replaces rows from that file only.
+- Imports are local-only.
+- Re-import of the same file hash replaces or skips records from that file.
 - Existing rows from other files are preserved.
 - Transaction IDs prevent duplicate insertion across repeated import of identical records.
 
-## Rule precedence
+## Parser status
 
-1. Manual transaction override
-2. User-defined rules (enabled, ascending priority)
-3. Built-in defaults (ascending priority)
-4. Fallback: `Other` + default tag mapping
+The parser is generic and experimental. Users must validate transactions, balances, categories, tags, and depot summary values manually after import.
